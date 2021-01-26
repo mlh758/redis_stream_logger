@@ -36,6 +36,11 @@ It is _highly_ recommended that you set timeouts on your Redis connection. See t
 * max_len: Maximum size of stream. Ideally you will have a log consumer set up that calls xtrim after persisting your logs somewhere.
   If that's more than you need, and just want a simple way to cap the log size set max_len to some sufficiently large number to keep your logs around long enough to be useful.
 
+## Path to 1.0
+
+1. Unit tests: I slapped this together as a proof of concept and done some validation in a Rails app but automated tests are important before actually using this anywhere.
+2. Custom formatter: Right now it just takes the string from the logger and writes it to Redis. Ideally, the timestamp, log level, and tags would be written as separate keys.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
