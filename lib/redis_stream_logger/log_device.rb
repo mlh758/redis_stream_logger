@@ -2,6 +2,13 @@ require 'logger'
 require "redis_stream_logger/config"
 module RedisStreamLogger
   class LogDevice
+
+      #
+      # Creates a new LogDevice that can be used as a sink for Ruby Logger
+      #
+      # @param [Redis] conn connection to Redis
+      # @param [String] stream name of key to write to
+      #
       def initialize(conn = nil, stream: 'rails-log')
           @config = Config.new
           @closed = false
@@ -46,6 +53,12 @@ module RedisStreamLogger
         { maxlen: @config.max_len, approximate: true }
       end
 
+      #
+      # Writes a batch of log lines to the Redis stream
+      #
+      # @param [Array<String>] messages to write to the stream
+      #
+      #
       def write_batch(messages)
         redis = @config.connection
         opt = send_options
@@ -66,6 +79,13 @@ module RedisStreamLogger
         end
       end
 
+      #
+      # Pushes a message into the queue at the given interval
+      # to wake the writer thread up to ensure it sends partial
+      # buffers if no new logs come in.
+      #
+      # @param [Integer] interval to wake the writer up on
+      #
       def ticker(interval)
           loop do
               sleep(interval)
@@ -77,9 +97,29 @@ module RedisStreamLogger
           msg == :nudge || msg == :exit
       end
 
+      #
+      # Stores the name of the logger in the configured set so other tools can 
+      # locate the list of available log streams
+      #
+      #
+      def store_logger_name
+        @config.connection.sadd(@config.log_set_key, @config.stream_name)
+      rescue StandardError => exception
+        @error_logger.warn "unable to store name of log: #{exception}"
+      end
+
+      #
+      # Used in a thread to pull log messages from a queue and store them in batches into a redis
+      # stream.
+      #
+      # @param [Integer] buffer_max maximum number of log entries to buffer before sending
+      # @param [Integer] interval maximum amount of time to wait before sending a partial buffer
+      #
+      #
       def writer(buffer_max, interval)
           last_sent = Time.now
           buffered = []
+          store_logger_name
           loop do
               msg = @q.pop
               buffered.push(msg) unless control_msg?(msg)

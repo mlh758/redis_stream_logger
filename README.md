@@ -35,6 +35,7 @@ It is _highly_ recommended that you set timeouts on your Redis connection. See t
 * stream_name: Stream to publish messages to
 * max_len: Maximum size of stream. Ideally you will have a log consumer set up that calls xtrim after persisting your logs somewhere.
   If that's more than you need, and just want a simple way to cap the log size set max_len to some sufficiently large number to keep your logs around long enough to be useful.
+* log_set_key: Loggers will store the name of their stream into this key for discoverability
 
 ## Path to 1.0
 

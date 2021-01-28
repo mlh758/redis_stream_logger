@@ -16,7 +16,7 @@ module RedisStreamLogger
   # enough to be useful.
   #
   class Config
-    attr_accessor :buffer_size, :send_interval, :connection, :batch_size, :stream_name, :max_len
+    attr_accessor :buffer_size, :send_interval, :connection, :batch_size, :stream_name, :max_len, :log_set_key
 
     def initialize
       @buffer_size = 100
@@ -25,6 +25,7 @@ module RedisStreamLogger
       @batch_size = @buffer_size
       @stream_name = nil
       @max_len = nil
+      @log_set_key = "log-streams"
     end
   end
 end
