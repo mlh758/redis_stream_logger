@@ -2,7 +2,7 @@ require 'logger'
 require "redis_stream_logger/config"
 module RedisStreamLogger
   class LogDevice
-
+      attr_reader :config
       #
       # Creates a new LogDevice that can be used as a sink for Ruby Logger
       #
