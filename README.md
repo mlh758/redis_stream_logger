@@ -5,6 +5,9 @@ This gem creates a [log device](https://github.com/ruby/logger/blob/bf6d5aa37ee9
 The log device will buffer requests internally until either a time interval or buffer size is hit and then it will send all the log entries as a pipeline to minimize network
 traffic.
 
+There is a basic viewer for this logger (or any Redis stream if you're feeling brave) [here](https://github.com/mlh758/stream_log_viewer). It supports tailing
+a stream or searching logs with basic text matching.
+
 ## Installation
 
 Add this line to your application's Gemfile:
