@@ -18,16 +18,40 @@ gem 'redis_stream_logger'
 
 ## Usage
 
-To use in a Rails application add something like this to your config:
+To use in an application add something like this:
 
 ```rb
 redis_log = RedisStreamLogger::LogDevice.new do |config|
   config.connection = Redis.new
 end
-config.logger = Logger.new(redis_log)
+logger = Logger.new(redis_log)
 ```
 
 It is _highly_ recommended that you set timeouts on your Redis connection. See the [Redis docs](https://github.com/redis/redis-rb/#timeouts).
+
+If you are using a forking Rails server like Passenger this gets a lot weirder because currently the logger uses threads
+to handle IO and avoid blocking the main app. For Rails and Passenger it will look something like this:
+
+```rb
+# config.ru
+if defined?(PhusionPassenger)
+  PhusionPassenger.on_event(:starting_worker_process) do |forked|
+    next unless forked
+    Rails.logger.close
+    redis_log = RedisStreamLogger::LogDevice.new do |config|
+      config.connection = Redis.new
+      config.stream_name = 'app-logs'
+    end
+    logger = Logger.new(redis_log)
+    logger.level = Rails.application.config.log_level
+    Rails.logger = logger
+    Rails.application.config.logger = logger
+    Rails.application.config.action_controller.logger = logger
+  end
+end
+```
+
+I'm currently looking for a way to use one of the async libraries to improve things.
 
 ### Configuration
 
@@ -42,7 +66,7 @@ It is _highly_ recommended that you set timeouts on your Redis connection. See t
 
 ## Path to 1.0
 
-1. Custom formatter: Right now it just takes the string from the logger and writes it to Redis. Ideally, the timestamp, log level, and tags would be written as separate keys.
+The use of threads caused unexpected headaches in applications that rely on forking like Passenger. I'm hoping this library can drop the reliance on threads.
 
 ## Development
 

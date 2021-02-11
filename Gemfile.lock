@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    redis_stream_logger (0.1.0)
+    redis_stream_logger (0.2.0)
       redis (~> 4.0)
 
 GEM
