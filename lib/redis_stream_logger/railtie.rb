@@ -19,6 +19,7 @@ module RedisStreamLogger
 end
 
 class Railtie < ::Rails::Railtie
+  config.redis_stream_logger = nil
   initializer :redis_stream_logger, before: :initialize_logger do |app|
     RedisStreamLogger.setup(app)
   end
