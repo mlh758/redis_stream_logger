@@ -18,14 +18,7 @@ module RedisStreamLogger
           raise ArgumentError, 'must provide connection' if @config.connection.nil?
 
           @q = Queue.new
-          @error_logger = ::Logger.new(STDERR)
-          @ticker = Thread.new do
-              ticker(@config.send_interval)
-          end
-          @writer = Thread.new do
-              writer(@config.buffer_size, @config.send_interval)
-          end
-          at_exit { close }
+          start
       end
 
       def write(msg)
@@ -33,7 +26,9 @@ module RedisStreamLogger
       end
 
       def reopen(log = nil)
-          # no op
+          close
+          @config.connection._client.connect
+          start
       end
 
       def close
@@ -46,6 +41,18 @@ module RedisStreamLogger
       end
 
       private
+
+      def start
+        @closed = false
+        @error_logger = ::Logger.new(STDERR)
+        @ticker = Thread.new do
+            ticker(@config.send_interval)
+        end
+        @writer = Thread.new do
+            writer(@config.buffer_size, @config.send_interval)
+        end
+        at_exit { close }
+      end
 
       def send_options
         return {} if @config.max_len.nil?
