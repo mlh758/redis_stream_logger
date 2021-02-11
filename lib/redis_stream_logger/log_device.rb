@@ -12,7 +12,9 @@ module RedisStreamLogger
       def initialize(conn = nil, stream: 'rails-log')
           @config = Config.new
           @closed = false
-          yield @config if block_given?
+          # Just in case a whole new config is passed in like in the Railtie
+          new_conf = yield @config if block_given?
+          @config = new_conf if new_conf.is_a?(Config)
           @config.connection ||= conn
           @config.stream_name ||= stream
           raise ArgumentError, 'must provide connection' if @config.connection.nil?
