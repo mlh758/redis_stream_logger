@@ -1,6 +1,6 @@
 RSpec.describe RedisStreamLogger do
-  let(:redis_mock) { double('redis', sadd: nil, close: nil, xadd: nil) }
-  let(:pipeline) { double('pipeline') }
+  let(:client_mock) { double('client', connect: nil) }
+  let(:redis_mock) { double('redis', sadd: nil, close: nil, xadd: nil, _client: client_mock) }
   before do
     allow(redis_mock).to receive(:pipelined) do |_, &block|
       block.call()
@@ -36,5 +36,18 @@ RSpec.describe RedisStreamLogger do
     sleep(1)
     expect(redis_mock).to have_received(:xadd).exactly(5).times
     device.close
+  end
+
+  it 'reconnects when given the reopen command after flushing and resumes listening' do
+    device = RedisStreamLogger::LogDevice.new(stream: 'other') do |conf|
+      conf.connection = redis_mock
+      conf.buffer_size = 10
+    end
+    device.write('hello')
+    device.reopen
+    expect(redis_mock).to have_received(:xadd).with('other', m: 'hello')
+    device.write('hello again')
+    device.close
+    expect(redis_mock).to have_received(:xadd).with('other', m: 'hello again')
   end
 end
